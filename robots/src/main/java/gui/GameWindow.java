@@ -12,6 +12,7 @@ public class GameWindow extends JInternalFrame
     {
         super("Игровое поле", true, true, true, true);
         m_visualizer = new GameVisualizer();
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_visualizer, BorderLayout.CENTER);
         getContentPane().add(panel);

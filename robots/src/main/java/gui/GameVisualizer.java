@@ -86,7 +86,7 @@ public class GameVisualizer extends JPanel
         double diffX = toX - fromX;
         double diffY = toY - fromY;
         
-        return asNormalizedRadians(Math.tan(diffY / diffX));
+        return asNormalizedRadians(Math.atan2(diffY, diffX));
     }
     
     protected void onModelUpdateEvent()
