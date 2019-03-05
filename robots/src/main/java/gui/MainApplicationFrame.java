@@ -1,8 +1,9 @@
 package main.java.gui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -12,7 +13,10 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.JOptionPane;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
 import main.java.log.Logger;
 
@@ -36,7 +40,7 @@ public class MainApplicationFrame extends JFrame
             screenSize.height - inset*2);
 
         setContentPane(desktopPane);
-        
+
         
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
@@ -46,7 +50,17 @@ public class MainApplicationFrame extends JFrame
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                if (confirmClosing(MainApplicationFrame.this)) {
+                    MainApplicationFrame.this.setVisible(false);
+                    MainApplicationFrame.this.dispose();
+                    System.exit(0);
+                };
+            }
+        });
     }
     
     protected LogWindow createLogWindow()
@@ -64,6 +78,14 @@ public class MainApplicationFrame extends JFrame
     {
         desktopPane.add(frame);
         frame.setVisible(true);
+        frame.addInternalFrameListener(new InternalFrameAdapter() {
+            public void internalFrameClosing(InternalFrameEvent e) {
+                if (confirmClosing(frame)) {
+                    frame.setVisible(false);
+                    frame.dispose();
+                };
+            }
+        });
     }
     
 //    protected JMenuBar createMenuBar() {
@@ -138,6 +160,17 @@ public class MainApplicationFrame extends JFrame
         menuBar.add(lookAndFeelMenu);
         menuBar.add(testMenu);
         return menuBar;
+    }
+
+    private boolean confirmClosing(Component window){
+        Object[] options = {"Да", "Нет"};
+        int answer = JOptionPane.showOptionDialog(window,
+                "Закрыть окно?",
+                "Выход",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+        return answer == 0;
     }
     
     private void setLookAndFeel(String className)
