@@ -87,6 +87,18 @@ public class MainApplicationFrame extends JFrame
             }
         });
     }
+
+    private boolean confirmClosing(Component window)
+    {
+        Object[] options = {"Да", "Нет"};
+        int answer = JOptionPane.showOptionDialog(window,
+                "Закрыть окно?",
+                "Выход",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+        return answer == 0;
+    }
     
 //    protected JMenuBar createMenuBar() {
 //        JMenuBar menuBar = new JMenuBar();
@@ -120,12 +132,18 @@ public class MainApplicationFrame extends JFrame
     private JMenuBar generateMenuBar()
     {
         JMenuBar menuBar = new JMenuBar();
-        
+        menuBar.add(generateLookAndFeelMenu());
+        menuBar.add(generateTestMenu());
+        return menuBar;
+    }
+
+    private JMenu generateLookAndFeelMenu()
+    {
         JMenu lookAndFeelMenu = new JMenu("Режим отображения");
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
                 "Управление режимом отображения приложения");
-        
+
         {
             JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
             systemLookAndFeel.addActionListener((event) -> {
@@ -143,12 +161,16 @@ public class MainApplicationFrame extends JFrame
             });
             lookAndFeelMenu.add(crossplatformLookAndFeel);
         }
+        return lookAndFeelMenu;
+    }
 
+    private JMenu generateTestMenu()
+    {
         JMenu testMenu = new JMenu("Тесты");
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription(
                 "Тестовые команды");
-        
+
         {
             JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
             addLogMessageItem.addActionListener((event) -> {
@@ -156,21 +178,7 @@ public class MainApplicationFrame extends JFrame
             });
             testMenu.add(addLogMessageItem);
         }
-
-        menuBar.add(lookAndFeelMenu);
-        menuBar.add(testMenu);
-        return menuBar;
-    }
-
-    private boolean confirmClosing(Component window){
-        Object[] options = {"Да", "Нет"};
-        int answer = JOptionPane.showOptionDialog(window,
-                "Закрыть окно?",
-                "Выход",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null, options, options[0]);
-        return answer == 0;
+        return testMenu;
     }
     
     private void setLookAndFeel(String className)

@@ -31,7 +31,7 @@ public class GameVisualizer extends JPanel
     private volatile int m_targetPositionY = 100;
     
     private static final double maxVelocity = 0.1; 
-    private static final double maxAngularVelocity = 0.001; 
+    private static final double maxAngularVelocity = 0.001;
     
     public GameVisualizer() 
     {
@@ -85,7 +85,7 @@ public class GameVisualizer extends JPanel
     {
         double diffX = toX - fromX;
         double diffY = toY - fromY;
-        
+
         return asNormalizedRadians(Math.atan2(diffY, diffX));
     }
     
