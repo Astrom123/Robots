@@ -31,7 +31,7 @@ public class GameVisualizer extends JPanel
     private volatile int m_targetPositionY = 100;
     
     private static final double maxVelocity = 0.1; 
-    private static final double maxAngularVelocity = 0.001;
+    private static final double maxAngularVelocity = 0.002;
     
     public GameVisualizer() 
     {
@@ -80,7 +80,7 @@ public class GameVisualizer extends JPanel
         double diffY = y1 - y2;
         return Math.sqrt(diffX * diffX + diffY * diffY);
     }
-    
+
     private static double angleTo(double fromX, double fromY, double toX, double toY)
     {
         double diffX = toX - fromX;
@@ -91,8 +91,8 @@ public class GameVisualizer extends JPanel
     
     protected void onModelUpdateEvent()
     {
-        double distance = distance(m_targetPositionX, m_targetPositionY, 
-            m_robotPositionX, m_robotPositionY);
+        double distance = distance(m_targetPositionX, m_targetPositionY,
+                m_robotPositionX, m_robotPositionY);
         if (distance < 0.5)
         {
             return;
@@ -108,7 +108,7 @@ public class GameVisualizer extends JPanel
         {
             angularVelocity = -maxAngularVelocity;
         }
-        
+
         moveRobot(velocity, angularVelocity, 10);
     }
     
@@ -141,17 +141,17 @@ public class GameVisualizer extends JPanel
         }
         m_robotPositionX = newX;
         m_robotPositionY = newY;
-        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration); 
+        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
         m_robotDirection = newDirection;
     }
 
     private static double asNormalizedRadians(double angle)
     {
-        while (angle < 0)
+        while (angle <= -Math.PI)
         {
             angle += 2*Math.PI;
         }
-        while (angle >= 2*Math.PI)
+        while (angle >= Math.PI)
         {
             angle -= 2*Math.PI;
         }
