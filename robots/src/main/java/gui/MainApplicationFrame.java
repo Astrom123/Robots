@@ -1,8 +1,9 @@
-package gui;
+package main.java.gui;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
@@ -12,9 +13,13 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.JOptionPane;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
-import log.Logger;
+import main.java.log.Logger;
+import sun.rmi.runtime.Log;
 
 /**
  * Что требуется сделать:
@@ -36,7 +41,7 @@ public class MainApplicationFrame extends JFrame
             screenSize.height - inset*2);
 
         setContentPane(desktopPane);
-        
+
         
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
@@ -46,7 +51,13 @@ public class MainApplicationFrame extends JFrame
         addWindow(gameWindow);
 
         setJMenuBar(generateMenuBar());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                exitMainWindow();
+            }
+        });
     }
     
     protected LogWindow createLogWindow()
@@ -64,6 +75,31 @@ public class MainApplicationFrame extends JFrame
     {
         desktopPane.add(frame);
         frame.setVisible(true);
+        frame.addInternalFrameListener(new InternalFrameAdapter() {
+            public void internalFrameClosing(InternalFrameEvent e) {
+                if (confirmClosing(frame)) {
+                    frame.setVisible(false);
+                    frame.removeInternalFrameListener(this);
+                    if (frame instanceof LogWindow)
+                    {
+                        ((LogWindow)frame).freeMemory();
+                    }
+                    frame.dispose();
+                };
+            }
+        });
+    }
+
+    private boolean confirmClosing(Component window)
+    {
+        Object[] options = {"Да", "Нет"};
+        int answer = JOptionPane.showOptionDialog(window,
+                "Закрыть окно?",
+                "Выход",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+        return answer == 0;
     }
     
 //    protected JMenuBar createMenuBar() {
@@ -98,12 +134,19 @@ public class MainApplicationFrame extends JFrame
     private JMenuBar generateMenuBar()
     {
         JMenuBar menuBar = new JMenuBar();
-        
+        menuBar.add(generateLookAndFeelMenu());
+        menuBar.add(generateTestMenu());
+        menuBar.add(generateExitMenu());
+        return menuBar;
+    }
+
+    private JMenu generateLookAndFeelMenu()
+    {
         JMenu lookAndFeelMenu = new JMenu("Режим отображения");
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
                 "Управление режимом отображения приложения");
-        
+
         {
             JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
             systemLookAndFeel.addActionListener((event) -> {
@@ -121,12 +164,16 @@ public class MainApplicationFrame extends JFrame
             });
             lookAndFeelMenu.add(crossplatformLookAndFeel);
         }
+        return lookAndFeelMenu;
+    }
 
+    private JMenu generateTestMenu()
+    {
         JMenu testMenu = new JMenu("Тесты");
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription(
                 "Тестовые команды");
-        
+
         {
             JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
             addLogMessageItem.addActionListener((event) -> {
@@ -134,10 +181,29 @@ public class MainApplicationFrame extends JFrame
             });
             testMenu.add(addLogMessageItem);
         }
+        return testMenu;
+    }
 
-        menuBar.add(lookAndFeelMenu);
-        menuBar.add(testMenu);
-        return menuBar;
+    private JMenu generateExitMenu()
+    {
+        JMenu exitMenu = new JMenu("Выход");
+        {
+            JMenuItem exitMenuItem = new JMenuItem("Выход из приложения");
+            exitMenuItem.addActionListener((event) -> {
+                exitMainWindow();
+            });
+            exitMenu.add(exitMenuItem);
+        }
+        return exitMenu;
+    }
+
+    private void exitMainWindow()
+    {
+        if (confirmClosing(MainApplicationFrame.this)) {
+            MainApplicationFrame.this.setVisible(false);
+            MainApplicationFrame.this.dispose();
+            System.exit(0);
+        };
     }
     
     private void setLookAndFeel(String className)

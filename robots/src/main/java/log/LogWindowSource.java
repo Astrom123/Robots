@@ -1,4 +1,4 @@
-package log;
+package main.java.log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,7 @@ import java.util.Collections;
  * 2. Этот класс хранит активные сообщения лога, но в такой реализации он 
  * их лишь накапливает. Надо же, чтобы количество сообщений в логе было ограничено 
  * величиной m_iQueueLength (т.е. реально нужна очередь сообщений 
- * ограниченного размера) 
+ * ограниченного размера)
  */
 public class LogWindowSource
 {
@@ -48,6 +48,10 @@ public class LogWindowSource
     public void append(LogLevel logLevel, String strMessage)
     {
         LogEntry entry = new LogEntry(logLevel, strMessage);
+        if (m_messages.size() > m_iQueueLength - 1)
+        {
+            m_messages.remove(0);
+        }
         m_messages.add(entry);
         LogChangeListener [] activeListeners = m_activeListeners;
         if (activeListeners == null)

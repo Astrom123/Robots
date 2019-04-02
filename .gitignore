@@ -1,4 +1,4 @@
-/.metadata
-/robots/.settings
+/robots/Robots.iml
+/robots/.idea
+/robots/target
 /robots/bin
-eclipse.bat
