@@ -19,6 +19,7 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 
 import main.java.log.Logger;
+import sun.rmi.runtime.Log;
 
 /**
  * Что требуется сделать:
@@ -54,11 +55,7 @@ public class MainApplicationFrame extends JFrame
 
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                if (confirmClosing(MainApplicationFrame.this)) {
-                    MainApplicationFrame.this.setVisible(false);
-                    MainApplicationFrame.this.dispose();
-                    System.exit(0);
-                };
+                exitMainWindow();
             }
         });
     }
@@ -82,6 +79,11 @@ public class MainApplicationFrame extends JFrame
             public void internalFrameClosing(InternalFrameEvent e) {
                 if (confirmClosing(frame)) {
                     frame.setVisible(false);
+                    frame.removeInternalFrameListener(this);
+                    if (frame instanceof LogWindow)
+                    {
+                        ((LogWindow)frame).freeMemory();
+                    }
                     frame.dispose();
                 };
             }
@@ -134,6 +136,7 @@ public class MainApplicationFrame extends JFrame
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(generateLookAndFeelMenu());
         menuBar.add(generateTestMenu());
+        menuBar.add(generateExitMenu());
         return menuBar;
     }
 
@@ -179,6 +182,28 @@ public class MainApplicationFrame extends JFrame
             testMenu.add(addLogMessageItem);
         }
         return testMenu;
+    }
+
+    private JMenu generateExitMenu()
+    {
+        JMenu exitMenu = new JMenu("Выход");
+        {
+            JMenuItem exitMenuItem = new JMenuItem("Выход из приложения");
+            exitMenuItem.addActionListener((event) -> {
+                exitMainWindow();
+            });
+            exitMenu.add(exitMenuItem);
+        }
+        return exitMenu;
+    }
+
+    private void exitMainWindow()
+    {
+        if (confirmClosing(MainApplicationFrame.this)) {
+            MainApplicationFrame.this.setVisible(false);
+            MainApplicationFrame.this.dispose();
+            System.exit(0);
+        };
     }
     
     private void setLookAndFeel(String className)

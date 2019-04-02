@@ -25,15 +25,18 @@ public class GameVisualizer extends JPanel
     
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100; 
-    private volatile double m_robotDirection = 0; 
+    private volatile double m_robotDirection = 0;
+
+    private volatile int m_borderX = 0;
+    private volatile int m_borderY = 0;
 
     private volatile int m_targetPositionX = 150;
     private volatile int m_targetPositionY = 100;
     
-    private static final double maxVelocity = 0.1; 
-    private static final double maxAngularVelocity = 0.002;
+    private static final double maxVelocity = 0.1;
+    private static final double maxAngularVelocity = 0.001;
     
-    public GameVisualizer() 
+    public GameVisualizer()
     {
         m_timer.schedule(new TimerTask()
         {
@@ -139,6 +142,10 @@ public class GameVisualizer extends JPanel
         {
             newY = m_robotPositionY + velocity * duration * Math.sin(m_robotDirection);
         }
+        if (newX > m_borderX) newX = 0;
+        if (newY > m_borderY) newY = 0;
+        if (newX < 0) newX = m_borderX;
+        if (newY < 0) newY = m_borderY;
         m_robotPositionX = newX;
         m_robotPositionY = newY;
         double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
@@ -206,5 +213,11 @@ public class GameVisualizer extends JPanel
         fillOval(g, x, y, 5, 5);
         g.setColor(Color.BLACK);
         drawOval(g, x, y, 5, 5);
+    }
+
+    public void setBorders(int x, int y)
+    {
+       m_borderX = x;
+       m_borderY = y;
     }
 }

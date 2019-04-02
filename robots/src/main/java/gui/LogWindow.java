@@ -1,11 +1,10 @@
 package main.java.gui;
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-import java.awt.TextArea;
+import java.awt.*;
 
-import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 
 import main.java.log.LogChangeListener;
 import main.java.log.LogEntry;
@@ -24,7 +23,7 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
         m_logContent = new TextArea("");
         m_logContent.setSize(200, 500);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_logContent, BorderLayout.CENTER);
         getContentPane().add(panel);
@@ -41,6 +40,11 @@ public class LogWindow extends JInternalFrame implements LogChangeListener
         }
         m_logContent.setText(content.toString());
         m_logContent.invalidate();
+    }
+
+    public void freeMemory()
+    {
+        m_logSource.unregisterListener(this);
     }
     
     @Override
