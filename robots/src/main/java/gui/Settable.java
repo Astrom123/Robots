@@ -1,4 +1,5 @@
 package main.java.gui;
 
-public class Settable {
+interface Settable {
+    void setSettings(Settings settings);
 }
