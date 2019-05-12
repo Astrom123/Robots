@@ -1,35 +1,36 @@
 package main.java.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.beans.PropertyVetoException;
-import java.io.Serializable;
-
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
+import java.awt.TextArea;
+import java.awt.BorderLayout;
+import java.awt.Point;
+import java.beans.PropertyVetoException;
+import java.io.Serializable;
+import java.util.Observer;
+import java.util.Observable;
 
+public class RobotCoordinatesWindow extends JInternalFrame implements Serializable, Settable, Observer {
 
-public class GameWindow extends JInternalFrame implements Serializable, Settable {
-    private final GameVisualizer m_visualizer;
-    public GameWindow() {
-        super("Игровое поле", true, true, true, true);
-        m_visualizer = new GameVisualizer();
+    private TextArea m_content;
+    private Robot m_robot;
+
+    public RobotCoordinatesWindow(Robot robot) {
+        super("Координаты робота", true, true, true, true);
+        m_robot = robot;
+        robot.addObserver(this);
+        m_content = new TextArea("");
+        m_content.setSize(400, 300);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(m_visualizer, BorderLayout.CENTER);
+        panel.add(m_content, BorderLayout.CENTER);
         getContentPane().add(panel);
-        pack();
+    }
 
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                Dimension size = e.getComponent().getSize();
-                m_visualizer.setBorders(size.width, size.height);
-            }
-        });
+    @Override
+    public void update(Observable o, Object key)
+    {
+        m_content.append(Integer.toString(m_robot.getX()) + " " + Integer.toString(m_robot.getY()) + "\n");
     }
 
     private Object writeReplace() {
@@ -37,10 +38,6 @@ public class GameWindow extends JInternalFrame implements Serializable, Settable
         Point location = isIcon() ? null : getLocation();
         Settings settings = new Settings(getSize(), location, state, getClass().getSimpleName());
         return settings;
-    }
-
-    public Robot getModel() {
-        return m_visualizer.getRobot();
     }
 
     public void setSettings(Settings settings) {

@@ -4,22 +4,13 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.*;
 
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.JOptionPane;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 
 import main.java.log.Logger;
-import sun.rmi.runtime.Log;
 
 /**
  * Что требуется сделать:
@@ -27,14 +18,13 @@ import sun.rmi.runtime.Log;
  * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
  *
  */
-public class MainApplicationFrame extends JFrame
-{
+public class MainApplicationFrame extends JFrame implements Serializable, Settable {
     private final JDesktopPane desktopPane = new JDesktopPane();
-    
+
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
         //of the screen.
-        int inset = 50;        
+        int inset = 50;
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(inset, inset,
             screenSize.width  - inset*2,
@@ -42,13 +32,16 @@ public class MainApplicationFrame extends JFrame
 
         setContentPane(desktopPane);
 
-        
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
 
         GameWindow gameWindow = new GameWindow();
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
+
+        RobotCoordinatesWindow coordWindow = new RobotCoordinatesWindow(gameWindow.getModel());
+        coordWindow.setSize(300 ,800);
+        addWindow(coordWindow);
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -58,10 +51,11 @@ public class MainApplicationFrame extends JFrame
                 exitMainWindow();
             }
         });
+
+        readSettings();
     }
     
-    protected LogWindow createLogWindow()
-    {
+    protected LogWindow createLogWindow() {
         LogWindow logWindow = new LogWindow(Logger.getDefaultLogSource());
         logWindow.setLocation(10,10);
         logWindow.setSize(300, 800);
@@ -71,8 +65,7 @@ public class MainApplicationFrame extends JFrame
         return logWindow;
     }
     
-    protected void addWindow(JInternalFrame frame)
-    {
+    protected void addWindow(JInternalFrame frame) {
         desktopPane.add(frame);
         frame.setVisible(true);
         frame.addInternalFrameListener(new InternalFrameAdapter() {
@@ -80,8 +73,7 @@ public class MainApplicationFrame extends JFrame
                 if (confirmClosing(frame)) {
                     frame.setVisible(false);
                     frame.removeInternalFrameListener(this);
-                    if (frame instanceof LogWindow)
-                    {
+                    if (frame instanceof LogWindow) {
                         ((LogWindow)frame).freeMemory();
                     }
                     frame.dispose();
@@ -90,8 +82,7 @@ public class MainApplicationFrame extends JFrame
         });
     }
 
-    private boolean confirmClosing(Component window)
-    {
+    private boolean confirmClosing(Component window) {
         Object[] options = {"Да", "Нет"};
         int answer = JOptionPane.showOptionDialog(window,
                 "Закрыть окно?",
@@ -131,8 +122,7 @@ public class MainApplicationFrame extends JFrame
 //        return menuBar;
 //    }
     
-    private JMenuBar generateMenuBar()
-    {
+    private JMenuBar generateMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(generateLookAndFeelMenu());
         menuBar.add(generateTestMenu());
@@ -140,13 +130,11 @@ public class MainApplicationFrame extends JFrame
         return menuBar;
     }
 
-    private JMenu generateLookAndFeelMenu()
-    {
+    private JMenu generateLookAndFeelMenu() {
         JMenu lookAndFeelMenu = new JMenu("Режим отображения");
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
         lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
                 "Управление режимом отображения приложения");
-
         {
             JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
             systemLookAndFeel.addActionListener((event) -> {
@@ -155,7 +143,6 @@ public class MainApplicationFrame extends JFrame
             });
             lookAndFeelMenu.add(systemLookAndFeel);
         }
-
         {
             JMenuItem crossplatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
             crossplatformLookAndFeel.addActionListener((event) -> {
@@ -167,13 +154,11 @@ public class MainApplicationFrame extends JFrame
         return lookAndFeelMenu;
     }
 
-    private JMenu generateTestMenu()
-    {
+    private JMenu generateTestMenu() {
         JMenu testMenu = new JMenu("Тесты");
         testMenu.setMnemonic(KeyEvent.VK_T);
         testMenu.getAccessibleContext().setAccessibleDescription(
                 "Тестовые команды");
-
         {
             JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
             addLogMessageItem.addActionListener((event) -> {
@@ -184,8 +169,7 @@ public class MainApplicationFrame extends JFrame
         return testMenu;
     }
 
-    private JMenu generateExitMenu()
-    {
+    private JMenu generateExitMenu() {
         JMenu exitMenu = new JMenu("Выход");
         {
             JMenuItem exitMenuItem = new JMenuItem("Выход из приложения");
@@ -197,25 +181,77 @@ public class MainApplicationFrame extends JFrame
         return exitMenu;
     }
 
-    private void exitMainWindow()
-    {
+    private void serialize() {
+        File file = new File("data.bin");
+        try (OutputStream os = new FileOutputStream(file)) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(os))) {
+                    oos.writeObject(this);
+                    for (JInternalFrame frame: desktopPane.getAllFrames()) {
+                        oos.writeObject(frame);
+                    }
+                    oos.flush();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+        }
+    }
+
+    private Object writeReplace() {
+        Settings settings = new Settings(getSize(), getLocationOnScreen(), getState(), getClass().getSimpleName());
+        return settings;
+    }
+
+    private void exitMainWindow() {
         if (confirmClosing(MainApplicationFrame.this)) {
+            serialize();
             MainApplicationFrame.this.setVisible(false);
             MainApplicationFrame.this.dispose();
             System.exit(0);
-        };
+        }
+    }
+
+    private void readSettings() {
+        File file = new File("data.bin");
+        if (file.exists()) {
+            try (InputStream is = new FileInputStream(file)) {
+                try (ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(is))) {
+                    Settings settings = (Settings) ois.readObject();
+                    setSettings(settings);
+                    for (int i = 0; i < desktopPane.getAllFrames().length; i++) {
+                        settings = (Settings) ois.readObject();
+                        for (JInternalFrame frame: desktopPane.getAllFrames()) {
+                            if (frame.getClass().getSimpleName().equals(settings.windowName)) {
+                                ((Settable)frame).setSettings(settings);
+                            }
+                        }
+                    }
+                }
+                catch (EOFException ex) {
+                    // just ignore
+                }
+                catch (IOException | ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public void setSettings(Settings settings) {
+        setState(settings.state);
+        setBounds(settings.location.x, settings.location.y,
+                settings.screenSize.width,
+                settings.screenSize.height);
     }
     
-    private void setLookAndFeel(String className)
-    {
-        try
-        {
+    private void setLookAndFeel(String className) {
+        try {
             UIManager.setLookAndFeel(className);
             SwingUtilities.updateComponentTreeUI(this);
         }
         catch (ClassNotFoundException | InstantiationException
-            | IllegalAccessException | UnsupportedLookAndFeelException e)
-        {
+            | IllegalAccessException | UnsupportedLookAndFeelException e) {
             // just ignore
         }
     }
