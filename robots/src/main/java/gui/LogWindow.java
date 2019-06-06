@@ -6,15 +6,17 @@ import java.awt.EventQueue;
 import java.awt.Point;
 import java.beans.PropertyVetoException;
 import java.io.Serializable;
+import java.util.ResourceBundle;
 
 import javax.swing.JPanel;
 import javax.swing.JInternalFrame;
 
+import main.java.locale.Translatable;
 import main.java.log.LogChangeListener;
 import main.java.log.LogEntry;
 import main.java.log.LogWindowSource;
 
-public class LogWindow extends JInternalFrame implements LogChangeListener, Serializable, Settable {
+public class LogWindow extends JInternalFrame implements LogChangeListener, Serializable, Settable, Translatable {
     private LogWindowSource m_logSource;
     private TextArea m_logContent;
 
@@ -75,5 +77,9 @@ public class LogWindow extends JInternalFrame implements LogChangeListener, Seri
     public void onLogChanged()
     {
         EventQueue.invokeLater(this::updateLogContent);
+    }
+
+    public void translate(ResourceBundle bundle) {
+        setTitle(bundle.getString("logWindow"));
     }
 }

@@ -5,11 +5,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 
+import main.java.locale.Translatable;
 import main.java.log.Logger;
 
 /**
@@ -20,6 +23,7 @@ import main.java.log.Logger;
  */
 public class MainApplicationFrame extends JFrame implements Serializable, Settable {
     private final JDesktopPane desktopPane = new JDesktopPane();
+    private ResourceBundle currentBundle = getDefaultBundle();
 
     public MainApplicationFrame() {
         //Make the big window be indented 50 pixels from each edge
@@ -53,6 +57,7 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
         });
 
         readSettings();
+        translate();
     }
     
     protected LogWindow createLogWindow() {
@@ -83,10 +88,10 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
     }
 
     private boolean confirmClosing(Component window) {
-        Object[] options = {"Да", "Нет"};
+        Object[] options = {currentBundle.getString("accept"), currentBundle.getString("dispose")};
         int answer = JOptionPane.showOptionDialog(window,
-                "Закрыть окно?",
-                "Выход",
+                currentBundle.getString("exitMessage"),
+                currentBundle.getString("exit"),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
                 null, options, options[0]);
@@ -126,17 +131,16 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(generateLookAndFeelMenu());
         menuBar.add(generateTestMenu());
+        menuBar.add(generateLangMenu());
         menuBar.add(generateExitMenu());
         return menuBar;
     }
 
     private JMenu generateLookAndFeelMenu() {
-        JMenu lookAndFeelMenu = new JMenu("Режим отображения");
+        JMenu lookAndFeelMenu = new JMenu(currentBundle.getString("mode"));
         lookAndFeelMenu.setMnemonic(KeyEvent.VK_V);
-        lookAndFeelMenu.getAccessibleContext().setAccessibleDescription(
-                "Управление режимом отображения приложения");
         {
-            JMenuItem systemLookAndFeel = new JMenuItem("Системная схема", KeyEvent.VK_S);
+            JMenuItem systemLookAndFeel = new JMenuItem(currentBundle.getString("system"), KeyEvent.VK_S);
             systemLookAndFeel.addActionListener((event) -> {
                 setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 this.invalidate();
@@ -144,7 +148,7 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
             lookAndFeelMenu.add(systemLookAndFeel);
         }
         {
-            JMenuItem crossplatformLookAndFeel = new JMenuItem("Универсальная схема", KeyEvent.VK_S);
+            JMenuItem crossplatformLookAndFeel = new JMenuItem(currentBundle.getString("universal"), KeyEvent.VK_S);
             crossplatformLookAndFeel.addActionListener((event) -> {
                 setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
                 this.invalidate();
@@ -155,30 +159,60 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
     }
 
     private JMenu generateTestMenu() {
-        JMenu testMenu = new JMenu("Тесты");
+        JMenu testMenu = new JMenu(currentBundle.getString("tests"));
         testMenu.setMnemonic(KeyEvent.VK_T);
-        testMenu.getAccessibleContext().setAccessibleDescription(
-                "Тестовые команды");
         {
-            JMenuItem addLogMessageItem = new JMenuItem("Сообщение в лог", KeyEvent.VK_S);
+            JMenuItem addLogMessageItem = new JMenuItem(currentBundle.getString("logMessage"), KeyEvent.VK_S);
             addLogMessageItem.addActionListener((event) -> {
-                Logger.debug("Новая строка");
+                Logger.debug(currentBundle.getString("testMessage"));
             });
             testMenu.add(addLogMessageItem);
         }
         return testMenu;
     }
 
-    private JMenu generateExitMenu() {
-        JMenu exitMenu = new JMenu("Выход");
+    private JMenu generateLangMenu() {
+        JMenu langMenu = new JMenu(currentBundle.getString("lang"));
+        langMenu.setMnemonic(KeyEvent.VK_L);
         {
-            JMenuItem exitMenuItem = new JMenuItem("Выход из приложения");
+            JMenuItem russian = new JMenuItem("Русский");
+            russian.addActionListener((event) -> {
+                Locale.setDefault(new Locale("ru"));
+                currentBundle = ResourceBundle.getBundle("main.java.locale.Resource", Locale.getDefault());
+                translate();
+            });
+
+            JMenuItem english = new JMenuItem("English");
+            english.addActionListener((event) -> {
+                Locale.setDefault(new Locale("en"));
+                currentBundle = ResourceBundle.getBundle("main.java.locale.Resource", Locale.getDefault());
+                translate();
+            });
+
+            langMenu.add(russian);
+            langMenu.add(english);
+        }
+        return langMenu;
+    }
+
+    private JMenu generateExitMenu() {
+        JMenu exitMenu = new JMenu(currentBundle.getString("exit"));
+        exitMenu.setMnemonic(KeyEvent.VK_E);
+        {
+            JMenuItem exitMenuItem = new JMenuItem(currentBundle.getString("exitButton"));
             exitMenuItem.addActionListener((event) -> {
                 exitMainWindow();
             });
             exitMenu.add(exitMenuItem);
         }
         return exitMenu;
+    }
+
+    private void translate() {
+        for (JInternalFrame frame: desktopPane.getAllFrames()) {
+            ((Translatable)frame).translate(currentBundle);
+        }
+        setJMenuBar(generateMenuBar());
     }
 
     private void serialize() {
@@ -236,6 +270,14 @@ public class MainApplicationFrame extends JFrame implements Serializable, Settab
                 ex.printStackTrace();
             }
         }
+    }
+
+    private static ResourceBundle getDefaultBundle() {
+        String defLang = Locale.getDefault().getLanguage();
+        if ("en".equals(defLang) || "ru".equals(defLang)) {
+            return ResourceBundle.getBundle("main.java.locale.Resource", Locale.getDefault());
+        }
+        return ResourceBundle.getBundle("main.java.locale.Resource", new Locale("en"));
     }
 
     public void setSettings(Settings settings) {

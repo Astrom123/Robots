@@ -1,5 +1,7 @@
 package main.java.gui;
 
+import main.java.locale.Translatable;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -7,12 +9,13 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.beans.PropertyVetoException;
 import java.io.Serializable;
+import java.util.ResourceBundle;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 
 
-public class GameWindow extends JInternalFrame implements Serializable, Settable {
+public class GameWindow extends JInternalFrame implements Serializable, Settable, Translatable {
     private final GameVisualizer m_visualizer;
     public GameWindow() {
         super("Игровое поле", true, true, true, true);
@@ -58,5 +61,9 @@ public class GameWindow extends JInternalFrame implements Serializable, Settable
                     settings.screenSize.width,
                     settings.screenSize.height);
         }
+    }
+
+    public void translate(ResourceBundle bundle) {
+        setTitle(bundle.getString("gameArea"));
     }
 }

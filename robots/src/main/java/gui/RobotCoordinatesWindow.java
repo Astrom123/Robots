@@ -1,5 +1,7 @@
 package main.java.gui;
 
+import main.java.locale.Translatable;
+
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import java.awt.TextArea;
@@ -9,11 +11,13 @@ import java.beans.PropertyVetoException;
 import java.io.Serializable;
 import java.util.Observer;
 import java.util.Observable;
+import java.util.ResourceBundle;
 
-public class RobotCoordinatesWindow extends JInternalFrame implements Serializable, Settable, Observer {
+public class RobotCoordinatesWindow extends JInternalFrame implements Serializable, Settable, Observer, Translatable {
 
     private TextArea m_content;
     private Robot m_robot;
+    private String coordinatesString = "Координаты робота";
 
     public RobotCoordinatesWindow(Robot robot) {
         super("Координаты робота", true, true, true, true);
@@ -30,7 +34,7 @@ public class RobotCoordinatesWindow extends JInternalFrame implements Serializab
     @Override
     public void update(Observable o, Object key)
     {
-        m_content.append(Integer.toString(m_robot.getX()) + " " + Integer.toString(m_robot.getY()) + "\n");
+        m_content.setText(coordinatesString + ": X=" + Integer.toString(m_robot.getX()) + " Y=" + Integer.toString(m_robot.getY()) + "\n");
     }
 
     private Object writeReplace() {
@@ -55,5 +59,10 @@ public class RobotCoordinatesWindow extends JInternalFrame implements Serializab
                     settings.screenSize.width,
                     settings.screenSize.height);
         }
+    }
+
+    public void translate(ResourceBundle bundle) {
+        setTitle(bundle.getString("robotCoordsWindow"));
+        coordinatesString = bundle.getString("coordinates");
     }
 }
